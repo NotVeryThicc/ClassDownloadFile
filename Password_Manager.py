@@ -2,6 +2,7 @@ from dataclasses import dataclass
 import string
 import random
 import pickle
+import requests
 
 
 @dataclass
@@ -57,18 +58,28 @@ class registry:
     def saveAs(self, fileName):       
         self.fileName = fileName       
         file = open(self.fileName, 'wb')
-        pickle.dump(self.register, file)
+        data = pickle.dumps(self.register)
+        file.write(data)
         file.close()
 
     def save(self):
         print('Saving') # This is for trouble shooting
         file = open(self.fileName, 'wb')
-        pickle.dump(self.register, file)
+        data = pickle.dump(self.register)
+        file.write(data)
         file.close()
 
     def load(self, fileName):
         print('Loading') # This is for trouble shooting
         if fileName != '':
             file = open(fileName, 'rb')
-            self.register = pickle.load(file)
+            data = pickle.loads(file.read())
+            self.register = data
             file.close()
+
+    def loadFromWeb(self, link):
+        print('Loading') # This is for trouble shooting
+        data = requests.get(link)
+        data = data.content
+        data = pickle.loads(data)
+        self.register = data

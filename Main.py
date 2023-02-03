@@ -15,6 +15,7 @@ from SavePass import Ui_Form
 # Own files
 from Password_Manager import entry, registry
 
+
 #LOOKINGTO
 #qfiledialgue
 
@@ -147,6 +148,7 @@ class PasswordManager:
 
     # Saving and loading
     def saveAs(self):
+        print('Saving')
         fileName = QFileDialog.getSaveFileName()[0]
         self.data.saveAs(fileName)
 
@@ -159,9 +161,15 @@ class PasswordManager:
         fileName = QFileDialog.getOpenFileName()[0]
         print(fileName)
         self.data.load(fileName)
+
+        self.fileName = fileName
         self.updateCategoriesList()
         self.data.updateTaglist()
         self.setTreeDisplay(0)
+
+    def loadFromWeb(self):
+        ##needs UI
+        self.data.loadFromWeb("https://www.dropbox.com/s/uggnyqy69t8z90p/Passwords.txt?dl=1")
 
 app = QtWidgets.QApplication(sys.argv)
 PM = PasswordManager()
