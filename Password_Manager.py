@@ -62,10 +62,11 @@ class registry:
         file.write(data)
         file.close()
 
-    def save(self):
+    def save(self, fileName):
         print('Saving') # This is for trouble shooting
+        self.fileName = fileName
         file = open(self.fileName, 'wb')
-        data = pickle.dump(self.register)
+        data = pickle.dumps(self.register)
         file.write(data)
         file.close()
 

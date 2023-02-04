@@ -154,7 +154,7 @@ class PasswordManager:
 
     def save(self):
         print('Saving')
-        self.data.save()
+        self.data.save(self.fileName)
 
     def load(self):
         print('Loading') # This is for trouble shooting
