@@ -1,10 +1,12 @@
 #Standard Lib
 import sys
-#import crypt
+from cryptography.fernet import Fernet
+import pickle
+import requests
+#import cryptography.fernet import Fernet
 #Qt
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QMessageBox, QTreeWidgetItem, QFileDialog
-
 
 # UI files
 from CreatePass import Create_Master_Password_UI
@@ -15,28 +17,29 @@ from SavePass import Ui_Form
 # Own files
 from Password_Manager import entry, registry
 
-
-#LOOKINGTO
-#qfiledialgue
-
 class PasswordManager:
     def __init__(self):
 
         self.fileName = 'MySecretPasswords.txt'
+        self.salt = 'afsj1234jnvljvkajdfg&3'
+        self.data = registry()
 
         self.Main_Window = QtWidgets.QMainWindow()
         self.Main_Window_UI = Ui_MainWindow()
         self.Main_Window_UI.setupUi(self.Main_Window)
         self.Create_Master_Pass = Create_Master_Password_UI()
         self.Enter_Master_Pass = Enter_Master_Pass_UI()
-        self.data = registry()
-
+        
         self.Main_Window_UI.SearchButton.clicked.connect(self.searchClicked)
         self.Main_Window_UI.SettingsButton.clicked.connect(self.searchClicked)
         self.Main_Window_UI.AddPassButton.clicked.connect(self.addPassClicked)
         self.Main_Window_UI.AddCategory.clicked.connect(self.addCategotyClicked)
         self.Main_Window_UI.DeleteCategory.clicked.connect(self.deleteCategoryClicked)
+        self.Main_Window_UI.DeletePassword.clicked.connect(self.deleteAccountClicked)
+
         self.Main_Window_UI.CategoriesWidget.itemSelectionChanged.connect(self.clickedCategory)
+        self.Main_Window_UI.PasswordsWidget.itemSelectionChanged.connect(self.clickedPassword)
+
         self.Main_Window_UI.actionSave.triggered.connect(lambda: self.save())
         self.Main_Window_UI.actionSave_2.triggered.connect(lambda: self.saveAs())
         self.Main_Window_UI.actionOpen_file.triggered.connect(lambda: self.load())
@@ -46,6 +49,7 @@ class PasswordManager:
         self.addPassUI.setupUi(self.addPass)
 
         self.updateCategoriesList()
+        self.selectedCategory = 0
         self.Main_Window.show()
 
     def searchClicked(self):
@@ -102,18 +106,17 @@ class PasswordManager:
         counter = 0
         finalCount = 0
         for i in range(0, len(self.data.register) - 1):
-            print(self.data.register[counter][0])
+            #print(self.data.register[counter][0])
             if entry.tag == self.data.register[counter][0]:
                 finalCount = counter
             counter = counter + 1
         
         self.setTreeDisplay(finalCount)
-
         #print(self.data.register[0])
 
     def clickedCategory(self):
-        selectedCategory = self.Main_Window_UI.CategoriesWidget.currentRow()
-        self.setTreeDisplay(selectedCategory)
+        self.selectedCategory = self.Main_Window_UI.CategoriesWidget.currentRow()
+        self.setTreeDisplay(self.selectedCategory)
         
     def showPassword(self):
         if  self.addPassUI.ShowPassButton.isChecked() == True:
@@ -134,6 +137,7 @@ class PasswordManager:
         Urls = []
         passwords = []
         tag = self.data.register[val][0]
+
         for i in range(1, len(self.data.register[val])):
             usernames.append(self.data.register[val][i].username)
             Urls.append(self.data.register[val][i].url)
@@ -146,30 +150,79 @@ class PasswordManager:
             Item.setText(2, usernames[i])
             Item.setText(3, passwords[i])
 
+    def clickedPassword(self):
+        self.clickedAccTag = self.Main_Window_UI.PasswordsWidget.currentItem().text(0)
+        self.clickedAccUrl = self.Main_Window_UI.PasswordsWidget.currentItem().text(1)
+        self.clickedAccUser = self.Main_Window_UI.PasswordsWidget.currentItem().text(2)
+        self.clickedAccPass = self.Main_Window_UI.PasswordsWidget.currentItem().text(3)
+        #print(self.clickedAccUrl)
+
+    def deleteAccountClicked(self): 
+        self.data.delFromCategory(self.selectedCategory, self.clickedAccUrl, self.clickedAccUser, self.clickedAccPass)
+        self.setTreeDisplay(self.selectedCategory)
+
     # Saving and loading
     def saveAs(self):
         print('Saving')
+        self.setStatusBar('Saving')
+
         fileName = QFileDialog.getSaveFileName()[0]
-        self.data.saveAs(fileName)
+        self.data.fileName = fileName
+        file = open(fileName, "wb")
+        data = pickle.dumps(self.data)
+        file.write(data)
+        file.close
+
+        #self.data.saveAs(fileName)
 
     def save(self):
         print('Saving')
-        self.data.save(self.fileName)
+        self.setStatusBar('Saving')
+
+        file = open(self.fileName, "wb")
+        data = data = pickle.dumps(self.data)
+        #Encrypt
+        file.write(data)
+        file.close
+        #self.data.save(self.fileName)
 
     def load(self):
         print('Loading') # This is for trouble shooting
+        self.setStatusBar('Loading')
+
         fileName = QFileDialog.getOpenFileName()[0]
-        print(fileName)
-        self.data.load(fileName)
+        if fileName != '':
+            file = open(fileName, 'rb')
+            data = pickle.loads(file.read())
+            #Decrypt
+            self.data = data
+            file.close()
+        #self.data.load(fileName)
 
         self.fileName = fileName
         self.updateCategoriesList()
         self.data.updateTaglist()
         self.setTreeDisplay(0)
+        self.selectedCategory = 0
 
     def loadFromWeb(self):
         ##needs UI
-        self.data.loadFromWeb("https://www.dropbox.com/s/uggnyqy69t8z90p/Passwords.txt?dl=1")
+        self.setStatusBar('Loading from Web')
+        #self.data.loadFromWeb("https://www.dropbox.com/s/uggnyqy69t8z90p/Passwords.txt?dl=1")
+        link = 'https://www.dropbox.com/s/uggnyqy69t8z90p/Passwords.txt?dl=1'
+        
+        data = requests.get(link)
+        data = data.content
+        data = pickle.loads(data)
+        self.data = data
+        
+        self.updateCategoriesList()
+        self.data.updateTaglist()
+        self.setTreeDisplay(0)
+        self.selectedCategory = 0
+
+    def setStatusBar(self, text):
+        self.Main_Window_UI.StatusBarLabel.setText(text)
 
 app = QtWidgets.QApplication(sys.argv)
 PM = PasswordManager()
