@@ -36,6 +36,7 @@ class PasswordManager:
         self.Main_Window_UI.AddCategory.clicked.connect(self.addCategotyClicked)
         self.Main_Window_UI.DeleteCategory.clicked.connect(self.deleteCategoryClicked)
         self.Main_Window_UI.DeletePassword.clicked.connect(self.deleteAccountClicked)
+        self.Main_Window_UI.SearchButton.clicked.connect(self.searchClicked)
 
         self.Main_Window_UI.CategoriesWidget.itemSelectionChanged.connect(self.clickedCategory)
         self.Main_Window_UI.PasswordsWidget.itemSelectionChanged.connect(self.clickedPassword)
@@ -53,7 +54,23 @@ class PasswordManager:
         self.Main_Window.show()
 
     def searchClicked(self):
-        pass
+        searchTerm = self.Main_Window_UI.SearchBox.text()
+        self.Main_Window_UI.PasswordsWidget.clear()
+        searchResult = []
+
+        # Getting seach results
+        for catagory in self.data.register:
+            for account in range(1, len(catagory)):
+                if catagory[account].url == searchTerm or catagory[account].username == searchTerm or catagory[account].password == searchTerm:
+                    searchResult.append(catagory[account])
+
+        #Displaying seach results
+        for i in range(len(searchResult)):
+            Item = QTreeWidgetItem(self.Main_Window_UI.PasswordsWidget)
+            Item.setText(0, searchResult[i].tag)
+            Item.setText(1, searchResult[i].url)
+            Item.setText(2, searchResult[i].username)
+            Item.setText(3, searchResult[i].password)
 
     def settingsClicked(self):
         pass
