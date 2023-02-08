@@ -61,6 +61,27 @@ class registry:
             passwordStr += str(i)
         return passwordStr
     
+    def editAccount(self, accountTag, accountUser, accountPass, accountUrl, newEntry):
+        row = -1
+        category = -1
+
+        for i in range(len(self.register)):
+            if self.register[i][0] == accountTag:
+                category = i
+                break
+
+        if category < 0:
+            return 0
+
+        for i in range(1, len(self.register[category])):
+            if self.register[category][i].url == accountUrl and self.register[category][i].username == accountUser and self.register[category][i].password == accountPass:
+                row = i
+                break
+
+        if row < 0:
+            return 0
+
+        self.register[category][row] = newEntry
     # Saving and loading
 
     # def saveAs(self, fileName):       
